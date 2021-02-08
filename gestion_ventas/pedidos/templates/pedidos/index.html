@@ -3,7 +3,11 @@
 
 {% block body %}
 
-<h1>Sitio de venta de artículos online</h1>
-<p>Acceder como <a href="{% url 'pedidos:cliente' %}">cliente</a> o como <a href="{% url 'pedidos:personal' %}">personal</a></p>
+<header>
+    <h1>Gestion de pedidos online | PÁGINA PRINCIPAL</h1>
+</header>
+<div class="sub-container">
+<p>Acceder como <a href="{% url 'pedidos:cliente' %}">cliente</a> o como <a href="{% url 'pedidos:personal' %}">personal</a>.</p>
+</div>
 
 {% endblock %}

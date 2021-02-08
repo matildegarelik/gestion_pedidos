@@ -1,43 +1,58 @@
 {% extends "./layout.html" %}
 {% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'pedidos/estilo.css' %}">
 
 {% block body %}
+<header>
+    <h1>Gestion de pedidos online | CLIENTE</h1>
+</header>
+<div class="sub-container">
+<h2>Bienvenido cliente</h2>
+<div class="tipo_cliente">
+    <p>Es nuevo o ya está registrado en nuestro sitio?  </p>
+    <select id="tipo_cliente">
+        <option value="nuevo" selected>Nuevo</option>
+        <option value="existente">Existente</option>
+    </select><br>
+    <hr>
+    <div id="nuevo">
+        <h3>Por favor, complete sus datos:</h3>
+        <form method='POST' action="">
+            {% csrf_token %}
+            <label for="nombre">Nombre</label><br>
+            <input type="text" name="nombre" required><br><br>
+            <label for="apellido">Apellido</label><br>
+            <input type="text" name="apellido" required><br><br>
+            <label for="email">Correo electrónico</label><br>
+            <input type="email" name="email" required><br><br>
+            <label for="edad">Edad</label><br>
+            <input type="number"  min="1" step="1" name="edad" required><br><br>
+            <label for="direccion">Dirección</label><br>
+            <input type="text" name="direccion" required><br><br>
+            <label for="cp">Código postal</label><br>
+            <input type="text" name="cp" minlength="5" maxlength="5" required><br><br>
+            <input type="submit" name="submit" value="Registrarse"><br>
+        </form>
+        
+    </div>
+    <div id="existente">
+        <h3>Por favor, ingrese su dirección de correo electrónico:</h3>
+        <form method='POST'>
+            {% csrf_token %}
+            <label for="email">Correo electrónico</label><br>
+            <input id="email" type="email" name="email" required><br><br>
+            <input type="submit" name="submit" id="ingresar" value="Ingresar"><br>
+        </form>
+    </div>
+</div>
+<br>
 
-<h1>Bienvenido cliente</h1>
-<h2>Es nuevo o ya está registrado en nuestro sitio?</h2>
-<select id="tipo_cliente">
-    <option value="nuevo" selected>Nuevo</option>
-    <option value="existente">Existente</option>
-</select>
-<hr>
-<div id="nuevo">
-    <h2>Por favor, complete sus datos:</h2>
-    <form method='POST' action="">
-        {% csrf_token %}
-        <label for="nombre">Nombre</label>
-        <input type="text" name="nombre" required>
-        <label for="apellido">Apellido</label>
-        <input type="text" name="apellido" required>
-        <label for="email">Correo electrónico</label>
-        <input type="email" name="email" required>
-        <label for="edad">Edad</label>
-        <input type="number"  min="1" step="1" name="edad" required>
-        <label for="direccion">Dirección</label>
-        <input type="text" name="direccion" required>
-        <label for="cp">Código postal</label>
-        <input type="text" name="cp" required>
-        <input type="submit" value="Registrarse">
-    </form>
-    
-</div>
-<div id="existente">
-    <h2>Por favor, ingrese su dirección de correo electrónico:</h2>
-    <label for="email">Correo electrónico</label>
-    <input id="email" type="email" name="email" required>
-    <input type="submit" id="ingresar" value="Ingresar">
-</div>
+<div id="msj">{{mensaje}}</div>
 
 <div id="comprar">
+    <h3>Datos</h3>
+    <div id="cliente_logueado"></div>
+    <h3>Seleccione los artículos que desee comprar</h3>
     <table class="table" id="tbl">
         <thead>
             <tr> 
@@ -51,17 +66,18 @@
             </tr>
         </thead>
         <tbody>
-            {% for producto in productos %}
+            {% for articulo in articulos %}
                 <tr class="row_body">
                     <th scope="row" class="num"></th>
-                    <td>{{producto.nombre}}</td>
-                    <td>{{producto.stock_actual}}</td>
-                    <td>{{producto.precio}}</td>
-                    <form action="{% url 'cliente' %}" method="POST">
+                    <td>{{articulo.nombre}}</td>
+                    <td>{{articulo.stock_actual}}</td>
+                    <td>{{articulo.precio}}</td>
+                    <form method="POST">
                         {% csrf_token %}
-                        <td><input type="number" min="0" value="0" name="cantidad"></td>
-                        <td><button value="comprar"></td>
-                        <input type="hidden" name="id-producto" value="{{producto.id}}"/>
+                        <td><input type="number" min="1" value="0" name="cantidad"></td>
+                        <td><button name="submit" value="Comprar">Comprar</button></td>
+                        <input type="hidden" name="id-articulo" value="{{articulo.id}}"/>
+                        <input type="hidden" name="id-cliente" value="{{cliente_logueado.id}}"/>
                     </form>      
                 </tr>
             {% endfor %}
@@ -72,11 +88,28 @@
 
 <br><hr>
 <a href="{% url 'pedidos:index' %}">Volver a index</a>
+</div>
 
 <script>
+    var accion = "{{accion}}";
+
     $('div#nuevo').show();
     $('div#existente').hide();
     $('div#comprar').hide();
+
+    if (accion =='2'){
+        console.log("login")
+        $('div.tipo_cliente').hide();
+        $('div#comprar').show();
+        $("div#cliente_logueado").html('<p>Nombre: {{cliente_logueado.apellido}}, {{cliente_logueado.nombre}}.</p><p>Correo Electrónico: {{cliente_logueado.email}}</p>')
+    }else if(accion == '1'){
+        console.log("nuevo registro ")
+        $('select#tipo_cliente option[value="existente"]').attr('selected', 'true');
+        $('select#tipo_cliente option[value="nuevo"]').attr('selected', 'false');
+        $('div#existente').show();
+        $('div#nuevo').hide();
+    }
+
     $('select#tipo_cliente').change(function(e){
             if (e.target.value == 'nuevo'){
                 $('div#nuevo').show();
@@ -86,14 +119,6 @@
                 $('div#nuevo').hide();
             }
     });
-
-    $('#ingresar').click(function(e){
-        e.preventDefault();
-        var email = $('input#email').val();
-        if (email in clientes.email){
-            $('div#comprar').show();
-        }
-    })
 </script>
 
 {% endblock %}

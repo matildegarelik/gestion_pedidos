@@ -9,7 +9,7 @@ class Cliente (models.Model):
     nombre = models.CharField(max_length=64)
     apellido = models.CharField(max_length=64)
     email = models.EmailField()
-    #fecha_nacimiento= models.DateField()
+    edad= models.PositiveIntegerField()
     direccion = models.CharField(max_length=200)
     cod_postal = models.CharField(max_length=5, validators=[RegexValidator(r'^[0-9]{5}$')])
 
@@ -22,13 +22,14 @@ class Articulo(models.Model):
 class Reparto (models.Model):
     nombre = models.CharField(max_length=64)
     identificador=models.CharField(max_length=64)
-    dia= models.DateField()
+    dia= models.DateField(null=True)
 
 POSIBLES_ESTADOS = [
     ('no asignado', 'no asignado'),
     ('en reparto', 'en reparto'),
     ('incidencia', 'incidencia'),
-    ('repartido', 'repartido')
+    ('repartido', 'repartido'),
+    ('preparado', 'preparado')
 ]
 
 class Pedido (models.Model):
@@ -36,7 +37,7 @@ class Pedido (models.Model):
     cantidad = models.IntegerField()
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     articulo = models.ForeignKey(Articulo, on_delete=models.CASCADE)
-    reparto = models.ForeignKey(Reparto, on_delete=models.CASCADE)
+    reparto = models.ForeignKey(Reparto, on_delete=models.CASCADE, null=True, blank=True)
 
 
     
