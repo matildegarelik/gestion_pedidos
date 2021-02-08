@@ -17,8 +17,12 @@
     <br>
     <hr>
     <h3>Asignación de repartos</h3>
+    <p id="msj">{{mensaje}}</p>
     <h4>Seleccione pedido preparado</h4>
+    <div class="big-box">
     {% for pedido in pedidos_preparados %}
+    <div class="medium-box"> 
+    <h5>ID Pedido: {{pedido.id}}</h5>
     <div class="box" id="pedido_{{pedido.id}}">
         <!--Aca cambia solo de estado de preparado a en reparto-->
         <ul>
@@ -30,10 +34,12 @@
         </ul>  
     </div>
     <button value="{{pedido.id}}" class="seleccionar">Seleccionar</button>
+    </div>
     {% endfor %}
+</div>
     <div class="asignar">
-    <br>
-    <hr>
+        <br>
+        <hr>
         <h4>Asignar reparto</h4>
         <p>Repartos de hoy: </p>
         <ul>
@@ -51,9 +57,9 @@
             <label for="identificador">Identificador</label>
             <input id="identificador" type="text" name="identificador" required>
             <label for="dia">Día</label>
-            <input id="dia" type="date" name="dia" required value="{{today}}">
+            <input id="dia" type="date" name="dia" value="{{today}}"required>
             <input type="hidden" name="pedido_id">
-            <button type="submit" name="submit" value="Asignar">Asignar</button>
+            <input type="submit" name="submit" value="Asignar">
         </form>
 
     </div>
@@ -63,7 +69,10 @@
     <br>
     <hr>
     <h3>Preparación de artículos pedidos</h3>
+    <div class="big-box">
     {% for pedido in pedidos_no_asignados %}
+        <div class="medium-box">
+        <h5>ID Pedido: {{pedido.id}}</h5>
         <div class="box" id="pedido_{{pedido.id}}">
             <ul>
                 <li>Articulo: {{pedido.articulo.nombre}}</li>
@@ -78,8 +87,9 @@
                 <input type="hidden"  name="pedido_id" value ="{{pedido.id}}">
                 <button name="submit" value="preparado">Marcar como preparado</button>
             </form>
-        </div>
+        </div></div>
     {% endfor %}
+    </div>
 </div>
 <div id="div-3" class="div-funcion"> 
     <br>
@@ -102,19 +112,19 @@
                 {% for articulo in articulos %}
                     <tr class="row_body">
                         <td><div class="input-group">
-                            <input class="form-control" type="text" value="{{articulo.nombre}}" name="nombre_{{articulo.id}}">
+                            <input class="form-control" type="text" value="{{articulo.nombre}}" name="nombre_{{articulo.id}}" required>
                         </div></td>
                         <td><div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">$</span>
                             </div>
-                            <input class="form-control" type="number" min="0" value="{{articulo.precio}}" name="precio_{{articulo.id}}">
+                            <input class="form-control" type="number" min="0" value="{{articulo.precio}}" name="precio_{{articulo.id}}" required>
                         </div></td>
                         <td><div class="input-group">
-                            <input class="form-control"type="number" min="0" value="{{articulo.stock_actual}}" name="sa_{{articulo.id}}">
+                            <input class="form-control"type="number" min="0" value="{{articulo.stock_actual}}" name="sa_{{articulo.id}}" required>
                         </div></td>
                         <td><div class="input-group">
-                            <input class="form-control" type="number" min="0" value="{{articulo.stock_maximo}}" name="sm_{{articulo.id}}">
+                            <input class="form-control" type="number" min="0" value="{{articulo.stock_maximo}}" name="sm_{{articulo.id}}" required>
                         </div></td>
                         <th scope="row" class="num" name="articulo_{{articulo.id}}">{{articulo.id}}</th>           
                     </tr>
@@ -140,10 +150,10 @@
                 <tr class="row_body">
                 <form action="" method="POST">
                     {% csrf_token %}
-                    <td><input type="text" name="nombre_nuevo"></td>
-                    <td><input type="number" min="0" name="precio_nuevo"></td>
-                    <td><input type="number" min="0" name="sa_nuevo"></td>
-                    <td><input type="number" min="0" name="sm_nuevo"></td>
+                    <td><input type="text" name="nombre_nuevo" required></td>
+                    <td><input type="number" min="0" name="precio_nuevo" required></td>
+                    <td><input type="number" min="0" name="sa_nuevo" required></td>
+                    <td><input type="number" min="0" name="sm_nuevo" required></td>
                     <th scope="row"><input type="submit" name="submit" value="Crear"></th> <!--Una vez enviado recargar la pag para que aparezca-->
                 </form>           
                 </tr>   
@@ -181,8 +191,8 @@
             </tr>
         </thead>
         <tbody>
-            <tr class="row_body">
             {% for pedido in pedidos_enreparto %}
+            <tr class="row_body">
                 <th>{{pedido.id}}</th>
                 <td>{{pedido.cliente.apellido}}, {{pedido.cliente.nombre}}</td>
                 <td>{{pedido.cliente.email}}</td>
@@ -201,8 +211,9 @@
                     <input type="hidden" name="id_ped" value="{{pedido.id}}">
                     <td><input type="submit" name="submit" value="Actualizar"></td> <!--Una vez enviado recargar la pag para que desaparezca-->
                 </form>  
-            {% endfor %}         
-            </tr>   
+                   
+            </tr> 
+            {% endfor %}  
         </tbody>
     </table>  
 </div>
@@ -222,6 +233,12 @@
         $('.div-funcion').hide();
         $(div_selected).show();
     });
+
+    var action = parseInt("{{action}}")
+    if (action>= 1 && action<=5){
+        $('.div-funcion').hide();
+        $('#div-'+action).show();
+    }
 
     //FUNCION 1
 
@@ -256,9 +273,6 @@
         $('input#identificador').val(identif);
     })
 
-
-
-    //FUNCION 2
 
 </script>
 

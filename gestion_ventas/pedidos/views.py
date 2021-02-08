@@ -7,7 +7,7 @@ from .models import Cliente, Pedido, Articulo, Reparto
 import datetime, time
 from django.core import serializers
 from operator import itemgetter
-
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 # pylint: disable=E1101
@@ -20,7 +20,7 @@ def index(request):
     return render(request, "pedidos/index.html")
 
 def cliente(request):
-    #clientes =  Cliente.objects.all()
+    #solo aparecen articulos que hay en stock
     if request.method=="POST":
         if request.POST['submit']=="Registrarse":
             if Cliente.objects.filter(email=request.POST['email']).count() > 0:
@@ -46,7 +46,7 @@ def cliente(request):
                 return render(request, "pedidos/cliente.html", {
                     'mensaje': 'Logueado con éxito!',
                     'cliente_logueado': Cliente.objects.get(email=request.POST['email']),
-                    'articulos': Articulo.objects.all(),
+                    'articulos': Articulo.objects.all().exclude(stock_actual="0"),
                     'accion': '2'
                 })
             else:
@@ -64,7 +64,7 @@ def cliente(request):
             return render(request, "pedidos/cliente.html", {
                     'mensaje': 'Compra realizada con éxito!',
                     'cliente_logueado': Cliente.objects.get(id=request.POST['id-cliente']),
-                    'articulos': Articulo.objects.all(),
+                    'articulos': Articulo.objects.all().exclude(stock_actual="0"),
                     'accion': '2'
                 })
 
@@ -73,7 +73,7 @@ def cliente(request):
             "accion": "0"
         })
 
-
+@csrf_exempt
 def personal(request):
     today =  time.strftime('%Y-%m-%d')
     pedidos_contados = []
@@ -105,7 +105,9 @@ def personal(request):
                 'articulos' : Articulo.objects.all(),
                 'pedidos_contados' : pedidos_contados,
                 'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
-                'today': today
+                'today': today,
+                'mensaje': "Pedido asociado a reparto con exito! Puede comprobarlo en la pestaña de pedidos 'en reparto'",
+                'action': "1"
             })
         elif request.POST['submit'] == "preparado":
             pedido_actualizado = Pedido.objects.get(id=request.POST['pedido_id'])
@@ -121,7 +123,8 @@ def personal(request):
                 'articulos' : Articulo.objects.all(),
                 'pedidos_contados' : pedidos_contados,
                 'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
-                'today': today
+                'today': today,
+                'action': "2"
             })
         elif request.POST['submit'] == "Guardar cambios":
             for art in Articulo.objects.all():
@@ -137,7 +140,8 @@ def personal(request):
                 'articulos' : Articulo.objects.all(),
                 'pedidos_contados' : pedidos_contados,
                 'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
-                'today': today
+                'today': today,
+                'action': "3"
             })
         elif request.POST['submit']=="Crear":
             nuevo_articulo = Articulo(
@@ -154,14 +158,24 @@ def personal(request):
                 'articulos' : Articulo.objects.all(),
                 'pedidos_contados' : pedidos_contados,
                 'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
-                'today': today
+                'today': today,
+                'action': "3"
             })
 
         elif request.POST['submit']=="Actualizar":
             pedido_nuevo_estado = Pedido.objects.get(id=request.POST['id_ped'])
             pedido_nuevo_estado.estado = request.POST['estado']
             pedido_nuevo_estado.save()
-
+            return render(request, "pedidos/personal.html", {
+                    'pedidos_preparados' : Pedido.objects.filter(estado="preparado"),
+                    'repartos_hoy' : Reparto.objects.filter(dia=datetime.date.today()),
+                    'pedidos_no_asignados' : Pedido.objects.filter(estado="no asignado"),
+                    'articulos' : Articulo.objects.all(),
+                    'pedidos_contados' : pedidos_contados,
+                    'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
+                    'today': today,
+                'action': "5"
+                })
     return render(request, "pedidos/personal.html", {
         'pedidos_preparados' : Pedido.objects.filter(estado="preparado"),
         'repartos_hoy' : Reparto.objects.filter(dia=datetime.date.today()),
@@ -169,5 +183,6 @@ def personal(request):
         'articulos' : Articulo.objects.all(),
         'pedidos_contados' : pedidos_contados,
         'pedidos_enreparto' : Pedido.objects.filter(estado="en reparto"),
-        'today': today
+        'today': today,
+        'action': "0"
     })
