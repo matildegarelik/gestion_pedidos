@@ -1,0 +1,220 @@
+{% extends "./layout.html" %}
+
+{% block body %}
+
+<h1>Bienvenido, personal.</h1>
+<div id="botones">
+    <button id="1" class="btn-funcion">Gestionar repartos de pedidos</button>
+    <button id="2" class="btn-funcion">Ver pedidos no preparados (para personal de almacen)</button>
+    <button id="3" class="btn-funcion">Gestionar articulos</button>
+    <button id="4" class="btn-funcion">Ver listado de clientes según cantidad de pedidos</button>
+    <button id="5" class="btn-funcion">Ver pedidos "en reparto"</button>
+</div>
+<div id="div-1" class="div-funcion">
+    <h2>ASIGNACIÓN DE REPARTOS</h2>
+    <h3>Seleccione pedido preparado</h3>
+    {% for pedido in pedidos_preparados %}
+    <div class="box" id="pedido_{{pedido.id}}">
+        <!--Aca cambia solo de estado de preparado a en reparto-->
+        <ul>
+            <li>Cliente: {{pedido.cliente.apellido}}, {{pedido.cliente.nombre}} (email: {{pedido.cliente.email}}). Edad: {{pedido.cliente.edad}}</li>
+            <li>Dirección: {{pedido.cliente.direccion}} (CP: {{pedido.cliente.cod_postal}}).</li>
+            <li>Producto: {{pedido.producto}} (cantidad: {{pedido.cantidad}}).</li>
+            <li>Precio total: {{pedido.producto.precio}}</li><!--FALTA MULTIPLICAR POR CANTIDAD-->
+            <button value="{{pedido.id}}" class="seleccionar">Seleccionar</button>
+        </ul>  
+    </div>
+    {% endfor %}
+    <div class="asignar">
+    <h3>Asignar reparto</h3>
+    <p>Repartos de hoy: </p>
+    <ul>
+        {% for reparto in repartos_hoy %}
+            <li class="repartos_hoy">Nombre: <span class="reparto_nombre">{{reparto.nombre}}</span>. Identificador: <span class="reparto_identificador">{{reparto.identificador}}</span>.</li>
+        {% endfor %}
+    </ul>
+    <div id="pedido_elegido">
+
+    </div>
+        <form id="asignar_reparto" method="POST">
+            {% csrf_token %}
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" name="nombre" required>
+            <label for="identificador">Identificador</label>
+            <input id="identificador" type="text" name="identificador" required>
+            <input type="hidden" name="pedido_id">
+            <input type="submit">
+        </form>
+
+    </div>
+    
+</div>
+<div id="div-2" class="div-funcion">
+    <!--Aca pasa de no asignado a preparado y se cambia automaticamente el stock-->
+    <h2>PREPARACIÓN DE ARTÍCULOS PEDIDOS</h2>
+    {% for pedido in pedidos_no_asignados %}
+        <div class="box" id="pedido_{{pedido.id}}">
+            <ul>
+                <li>Articulo: {{pedido.articulo}}</li>
+                <li>Cantidad: {{pedido.cantidad}}.</li>
+                <li>Stock Actual: {{pedido.articulo.stock_actual}}</li><!--AL prepararse se le resta la cantidad-->
+                <li>Stock maximo: {{pedido.articulo.stock_maximo}}</li>
+                <li>Cliente: {{pedido.cliente.apellido}}, {{pedido.cliente.nombre}}.</li>
+                <li>Dirección: {{pedido.cliente.direccion}} (CP: {{pedido.cliente.cod_postal}}).</li>
+            </ul>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden"  name="pedido_id" value ="{{pedido.id}}">
+                <button name="estado">Marcar como preparado</button>
+            </form>
+        </div>
+    {% endfor %}
+</div>
+<div id="div-3" class="div-funcion"> 
+    <h2>Gestión de artículos</h2>
+    <h3>Articulos existentes</h3>
+    <form action="" method="POST" >
+        {% csrf_token %}
+        <table class="table" id="tbl">
+            <thead>
+                <tr> 
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Stock actual</th>
+                    <th scope="col">Stock maximo</th>
+                    <th scope="col">ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for articulo in articulos %}
+                    <tr class="row_body">
+                        <td><input type="text" value="{{articulo.nombre}}" name="nombre_{{articulo.id}}"></td>
+                        <td><input type="number" min="0" value="{{articulo.precio}}" name="precio_{{articulo.id}}"></td>
+                        <td><input type="number" min="0" value="{{articulo.stock_actual}}" name="sa_{{articulo.id}}"></td>
+                        <td><input type="number" min="0" value="{{articulo.stock_maximo}}" name="sm_{{articulo.id}}"></td>
+                        <th scope="row" class="num" name="articulo_{{articulo.id}}">{{articulo.id}}</th>           
+                    </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+        <input type="submit" value="Guardar cambios">
+    </form>
+    <hr>
+    <h3>Agregar nuevo artículo</h3>
+        <table class="table" id="tbl">
+            <thead>
+                <tr> 
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Stock actual</th>
+                    <th scope="col">Stock maximo</th>
+                    <th scope="col">#</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row_body">
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <td><input type="text" name="nombre_nuevo"></td>
+                    <td><input type="number" min="0" name="precio_nuevo"></td>
+                    <td><input type="number" min="0" name="sa_nuevo"></td>
+                    <td><input type="number" min="0" name="sm_nuevo"></td>
+                    <th scope="row"><input type="submit" name="crear" value="Crear"></th> <!--Una vez enviado recargar la pag para que aparezca-->
+                </form>           
+                </tr>   
+            </tbody>
+        </table>  
+</div>
+<div id="div-4" class="div-funcion">
+    <h2>Listado de clientes según el número de pedidos (acumulación) que ha realizado.</h2>
+    <ol>
+        {% for pedido in pedidos_contados %}
+        <li>Cliente: {{pedido.cliente.apellido}}, {{pedido.cliente.nombre}} (email: {{pedido.cliente.email}}). Cantidad de pedidos</li>
+        {% endfor %}
+    </ol>
+</div>
+<div id="div-5" class="div-funcion"> <!--Aca se cambia de estado a repartido o incidencia-->
+    <h2>Listado de pedidos cuyo estado es 'en reparto' y actualización del mismo.</h2>
+    <table class="table" id="tbl">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nombre cliente</th>
+                <th scope="col">Correo electrónico</th>
+                <th scope="col">Dirección</th>
+                <th scope="col">Código Postal</th>
+                <th scope="col">Articulo</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Reparto</th>
+                <th scope="col">Estado</th>
+                <th scope="col">#</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="row_body">
+            {% for pedido in pedidos_enreparto %}
+                <th>{{pedido.id}}</th>
+                <td>{{pedido.cliente.apellido}}, {{pedido.cliente.nombre}}</td>
+                <td>{{pedido.cliente.email}}</td>
+                <td>{{pedido.cliente.direccion}}</td>
+                <td>{{pedido.cod_postal}}</td>
+                <td>{{pedido.articulo.nombre}}, {{pedido.cliente.nombre}}</td>
+                <td>{{pedido.cantidad}}</td>
+                <td>{{pedido.reparto.nombre}} ({{pedido.reparto.identificador}})</td>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <td><select name="estado">
+                        <option value='en reparto' selected>En reparto</option>
+                        <option value='incidencia'>Incidencia</option>
+                        <option value='repartido'>Repartido</option>
+                    </select></td>
+                    <input type="hidden" value="pedido.id">
+                    <td><input type="submit" name="actualizar" value="Actualizar"></td> <!--Una vez enviado recargar la pag para que desaparezca-->
+                </form>  
+            {% endfor %}         
+            </tr>   
+        </tbody>
+    </table>  
+</div>
+
+<br><hr>
+<a href="{% url 'pedidos:index' %}">Volver a index</a>
+
+<script>
+    $('.div-funcion').hide();
+    $('div.asignar').hide()
+    $('.btn-funcion').click(function(){
+        var id = (this.id);
+        var div_selected = '#div-'+id;
+        console.log(div_selected)
+        $('.div-funcion').hide();
+        $(div_selected).show();
+    });
+
+    //FUNCION 1
+
+    $('button.seleccionar').click(function(){
+        var id_ped = $(this).val()
+        $('div.asignar').show();
+        $('div.pedido_elegido').innerHTML = $('div#pedido_'+id_ped).clone();
+        $('#asignar_reparto input [type="hidden"]').val(id_ped);
+    })
+    
+
+    $('.repartos_hoy').hover(function(){
+        (this).css('cursor', 'pointer');
+    })
+    $('.repartos_hoy').click(function(){
+        var name = $(this+'.reparto_nombre').innerHTML();
+        var identif = $(this+'.reparto_identificador').innerHTML();
+        $('input#nombre').val(name);
+        $('input#identificador').val(identif);
+    })
+
+    //FUNCION 2
+
+</script>
+
+{% endblock %}

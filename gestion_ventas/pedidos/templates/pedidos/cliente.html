@@ -1,0 +1,99 @@
+{% extends "./layout.html" %}
+{% load static %}
+
+{% block body %}
+
+<h1>Bienvenido cliente</h1>
+<h2>Es nuevo o ya está registrado en nuestro sitio?</h2>
+<select id="tipo_cliente">
+    <option value="nuevo" selected>Nuevo</option>
+    <option value="existente">Existente</option>
+</select>
+<hr>
+<div id="nuevo">
+    <h2>Por favor, complete sus datos:</h2>
+    <form method='POST' action="">
+        {% csrf_token %}
+        <label for="nombre">Nombre</label>
+        <input type="text" name="nombre" required>
+        <label for="apellido">Apellido</label>
+        <input type="text" name="apellido" required>
+        <label for="email">Correo electrónico</label>
+        <input type="email" name="email" required>
+        <label for="edad">Edad</label>
+        <input type="number"  min="1" step="1" name="edad" required>
+        <label for="direccion">Dirección</label>
+        <input type="text" name="direccion" required>
+        <label for="cp">Código postal</label>
+        <input type="text" name="cp" required>
+        <input type="submit" value="Registrarse">
+    </form>
+    
+</div>
+<div id="existente">
+    <h2>Por favor, ingrese su dirección de correo electrónico:</h2>
+    <label for="email">Correo electrónico</label>
+    <input id="email" type="email" name="email" required>
+    <input type="submit" id="ingresar" value="Ingresar">
+</div>
+
+<div id="comprar">
+    <table class="table" id="tbl">
+        <thead>
+            <tr> 
+                <th scope="col">#</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">venta</th>
+    
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+                <tr class="row_body">
+                    <th scope="row" class="num"></th>
+                    <td>{{producto.nombre}}</td>
+                    <td>{{producto.stock_actual}}</td>
+                    <td>{{producto.precio}}</td>
+                    <form action="{% url 'cliente' %}" method="POST">
+                        {% csrf_token %}
+                        <td><input type="number" min="0" value="0" name="cantidad"></td>
+                        <td><button value="comprar"></td>
+                        <input type="hidden" name="id-producto" value="{{producto.id}}"/>
+                    </form>      
+                </tr>
+            {% endfor %}
+            
+        </tbody>
+    </table>
+</div>
+
+<br><hr>
+<a href="{% url 'pedidos:index' %}">Volver a index</a>
+
+<script>
+    $('div#nuevo').show();
+    $('div#existente').hide();
+    $('div#comprar').hide();
+    $('select#tipo_cliente').change(function(e){
+            if (e.target.value == 'nuevo'){
+                $('div#nuevo').show();
+                $('div#existente').hide();
+            }else{
+                $('div#existente').show();
+                $('div#nuevo').hide();
+            }
+    });
+
+    $('#ingresar').click(function(e){
+        e.preventDefault();
+        var email = $('input#email').val();
+        if (email in clientes.email){
+            $('div#comprar').show();
+        }
+    })
+</script>
+
+{% endblock %}
